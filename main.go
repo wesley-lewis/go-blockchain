@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+import "github.com/wesley-lewis/go-blockchain/network"
 
 // server: container
 // Transport => tcp, udp,
@@ -9,5 +9,13 @@ import "fmt"
 // Keypairs
 
 func main() {
-	fmt.Println("Hello world")
+	trLocal := network.NewLocalTransport("LOCAL")
+
+	opts := network.ServerOpts{
+		Transports: []network.Transport{trLocal},
+	}
+
+	s := network.NewServer(opts)
+
+	s.Start()
 }
