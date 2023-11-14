@@ -35,4 +35,7 @@ func TestSignBlock(t *testing.T) {
 	b.Validator = otherPrivKey.PublicKey()
 
 	assert.NotNil(t, b.Verify())
+
+	b.Height = 100
+	assert.NotNil(t, b.Verify())
 }
