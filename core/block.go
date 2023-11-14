@@ -1,6 +1,9 @@
 package core
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
 	"io"
 
 	"github.com/wesley-lewis/go-blockchain/crypto"
@@ -16,13 +19,44 @@ type Header struct {
 }
 
 type Block struct {
-	Header
+	*Header
 	Transaction []Transaction
 	Validator   crypto.PublicKey
 	Signature   *crypto.Signature
 
 	// Cached version of the header hash
 	hash types.Hash
+}
+
+func NewBlock(h *Header, txx []Transaction) *Block {
+	return &Block{
+		Header:      h,
+		Transaction: txx,
+	}
+}
+
+func (b *Block) Sign(privKey crypto.PrivateKey) error {
+	sig, err := privKey.Sign(b.HeaderData())
+	if err != nil {
+		return err
+	}
+
+	b.Validator = privKey.PublicKey()
+	b.Signature = sig
+
+	return nil
+}
+
+func (b *Block) Verify() error {
+	if b.Signature == nil {
+		return fmt.Errorf("Block has no signature")
+	}
+
+	if !b.Signature.Verify(b.Validator, b.HeaderData()) {
+		return fmt.Errorf("block has invalid signature")
+	}
+
+	return nil
 }
 
 func (b *Block) Decode(r io.Reader, dec Decoder[*Block]) error {
@@ -40,4 +74,13 @@ func (b *Block) Hash(hasher Hasher[*Block]) types.Hash {
 	}
 
 	return b.hash
+}
+
+func (b *Block) HeaderData() []byte {
+	buf := &bytes.Buffer{}
+
+	enc := gob.NewEncoder(buf)
+	enc.Encode(b.Header)
+
+	return buf.Bytes()
 }
