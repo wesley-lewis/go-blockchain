@@ -1,10 +1,11 @@
 package core
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/wesley-lewis/go-blockchain/crypto"
 	"github.com/wesley-lewis/go-blockchain/types"
 )
 
@@ -23,7 +24,15 @@ func randomBlock(height uint32) *Block {
 	return NewBlock(header, []Transaction{tx})
 }
 
-func TestHashBlock(t *testing.T) {
+func TestSignBlock(t *testing.T) {
+	privKey := crypto.GeneratePrivateKey()
 	b := randomBlock(0)
-	fmt.Println(b.Hash(BlockHasher{}))
+
+	assert.Nil(t, b.Sign(privKey))
+	assert.Nil(t, b.Verify())
+
+	otherPrivKey := crypto.GeneratePrivateKey()
+	b.Validator = otherPrivKey.PublicKey()
+
+	assert.NotNil(t, b.Verify())
 }
