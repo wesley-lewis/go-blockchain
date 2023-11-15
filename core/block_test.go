@@ -9,12 +9,12 @@ import (
 	"github.com/wesley-lewis/go-blockchain/types"
 )
 
-func randomBlock(height uint32) *Block {
+func randomBlock(height uint32, prevBlockHash types.Hash) *Block {
 	header := &Header{
-		Version:   1,
-		PrevBlock: types.RandomHash(),
-		Height:    height,
-		Timestamp: time.Now().UnixNano(),
+		Version:       1,
+		PrevBlockHash: prevBlockHash,
+		Height:        height,
+		Timestamp:     time.Now().UnixNano(),
 	}
 
 	tx := Transaction{
@@ -24,9 +24,9 @@ func randomBlock(height uint32) *Block {
 	return NewBlock(header, []Transaction{tx})
 }
 
-func randomBlockWithSignature(t *testing.T, height uint32) *Block {
+func randomBlockWithSignature(t *testing.T, height uint32, prevBlockHash types.Hash) *Block {
 	privKey := crypto.GeneratePrivateKey()
-	b := randomBlock(height)
+	b := randomBlock(height, prevBlockHash)
 
 	assert.Nil(t, b.Sign(privKey))
 	return b
@@ -34,7 +34,7 @@ func randomBlockWithSignature(t *testing.T, height uint32) *Block {
 
 func TestSignBlock(t *testing.T) {
 	privKey := crypto.GeneratePrivateKey()
-	b := randomBlock(0)
+	b := randomBlock(0, types.Hash{})
 
 	assert.Nil(t, b.Sign(privKey))
 	assert.Nil(t, b.Verify())
@@ -42,6 +42,21 @@ func TestSignBlock(t *testing.T) {
 	otherPrivKey := crypto.GeneratePrivateKey()
 	b.Validator = otherPrivKey.PublicKey()
 
+	assert.NotNil(t, b.Verify())
+
+	b.Height = 100
+	assert.NotNil(t, b.Verify())
+}
+
+func TestVerifyBlock(t *testing.T) {
+	privKey := crypto.GeneratePrivateKey()
+	b := randomBlock(0, types.Hash{})
+
+	assert.Nil(t, b.Sign(privKey))
+	assert.Nil(t, b.Verify())
+
+	otherPrivKey := crypto.GeneratePrivateKey()
+	b.Validator = otherPrivKey.PublicKey()
 	assert.NotNil(t, b.Verify())
 
 	b.Height = 100
