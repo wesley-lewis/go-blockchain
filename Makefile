@@ -1,8 +1,8 @@
 run: build
-	./bin/go-blockchain
+	@./bin/go-blockchain
 
 build: 
-	go build -o bin/go-blockchain
+	@go build -o bin/go-blockchain
 
 test:
-	go test -v ./...
+	@go test ./...
