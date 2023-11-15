@@ -1,13 +1,15 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/wesley-lewis/go-blockchain/types"
 )
 
 func newBlockchainWithGenesis(t *testing.T) *Blockchain {
-	bc, err := NewBlockchain(randomBlock(1))
+	bc, err := NewBlockchain(randomBlock(1, types.Hash{}))
 	assert.Nil(t, err)
 
 	return bc
@@ -16,16 +18,17 @@ func newBlockchainWithGenesis(t *testing.T) *Blockchain {
 func TestAddBlock(t *testing.T) {
 	bc := newBlockchainWithGenesis(t)
 
-	totalBlocks := 10
+	totalBlocks := 1000
 	for i := 2; i <= totalBlocks; i++ {
-		block := randomBlockWithSignature(t, uint32(i))
+		// block := randomBlockWithSignature(t, uint32(i), getPrevBlockHash(t, bc, uint32(i)))
+		block := randomBlockWithSignature(t, uint32(i), getPrevBlockHash(t, bc, uint32(i-1)))
 		assert.Nil(t, bc.AddBlock(block))
 	}
 
 	assert.Equal(t, bc.Height(), uint32(totalBlocks))
 	assert.Equal(t, len(bc.headers), totalBlocks)
 
-	assert.NotNil(t, bc.AddBlock(randomBlock(20)))
+	assert.NotNil(t, bc.AddBlock(randomBlock(20, types.Hash{})))
 }
 
 func TestNewBlockchain(t *testing.T) {
@@ -43,8 +46,9 @@ func TestGetHeader(t *testing.T) {
 	bc := newBlockchainWithGenesis(t)
 	lenBlocks := 1000
 
+	fmt.Println("TestGetHeader:", bc.Height())
 	for i := 2; i < lenBlocks; i++ {
-		block := randomBlockWithSignature(t, uint32(i))
+		block := randomBlockWithSignature(t, uint32(i), getPrevBlockHash(t, bc, uint32(i-1)))
 		assert.Nil(t, bc.AddBlock(block))
 		header, err := bc.GetHeader(uint32(i))
 		assert.Nil(t, err)
@@ -52,8 +56,16 @@ func TestGetHeader(t *testing.T) {
 	}
 }
 
-func TestAddBlockTooHigh(t *testing.T) {
-	bc := newBlockchainWithGenesis(t)
+// TODO: Too high blocks can't be hashed thus produce an error while getting its prevHash
+// func TestAddBlockTooHigh(t *testing.T) {
+// 	bc := newBlockchainWithGenesis(t)
+//
+// 	assert.NotNil(t, bc.AddBlock(randomBlockWithSignature(t, 3, getPrevBlockHash(t, bc, uint32(2)))))
+// }
 
-	assert.NotNil(t, bc.AddBlock(randomBlockWithSignature(t, 3)))
+func getPrevBlockHash(t *testing.T, bc *Blockchain, height uint32) types.Hash {
+	prevHeader, err := bc.GetHeader(height)
+	assert.Nil(t, err)
+
+	return BlockHasher{}.Hash(prevHeader)
 }
