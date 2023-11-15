@@ -28,9 +28,9 @@ func (h *Header) Bytes() []byte {
 
 type Block struct {
 	*Header
-	Transaction []Transaction
-	Validator   crypto.PublicKey
-	Signature   *crypto.Signature
+	Transactions []Transaction
+	Validator    crypto.PublicKey
+	Signature    *crypto.Signature
 
 	// Cached version of the header hash
 	hash types.Hash
@@ -38,9 +38,13 @@ type Block struct {
 
 func NewBlock(h *Header, txx []Transaction) *Block {
 	return &Block{
-		Header:      h,
-		Transaction: txx,
+		Header:       h,
+		Transactions: txx,
 	}
+}
+
+func (b *Block) AddTransaction(tx *Transaction) {
+	b.Transactions = append(b.Transactions, *tx)
 }
 
 func (b *Block) Sign(privKey crypto.PrivateKey) error {
@@ -49,6 +53,11 @@ func (b *Block) Sign(privKey crypto.PrivateKey) error {
 		return err
 	}
 
+	for _, tx := range b.Transactions {
+		if err := tx.Verify(); err != nil {
+			return err
+		}
+	}
 	b.Validator = privKey.PublicKey()
 	b.Signature = sig
 
