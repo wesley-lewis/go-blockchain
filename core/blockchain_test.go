@@ -40,7 +40,9 @@ func TestNewBlockchain(t *testing.T) {
 
 func TestHasBlock(t *testing.T) {
 	bc := newBlockchainWithGenesis(t)
-	assert.True(t, bc.HasBlock(0))
+	assert.True(t, bc.HasBlock(1))
+	assert.False(t, bc.HasBlock(2))
+	assert.False(t, bc.HasBlock(100))
 }
 
 func TestGetHeader(t *testing.T) {
@@ -59,11 +61,12 @@ func TestGetHeader(t *testing.T) {
 
 // TODO: Too high blocks can't be hashed thus produce an error while getting its prevHash
 
-// func TestAddBlockTooHigh(t *testing.T) {
-// 	bc := newBlockchainWithGenesis(t)
-//
-// 	assert.NotNil(t, bc.AddBlock(randomBlockWithSignature(t, 3, getPrevBlockHash(t, bc, uint32(2)))))
-// }
+func TestAddBlockTooHigh(t *testing.T) {
+	bc := newBlockchainWithGenesis(t)
+
+	assert.Nil(t, bc.AddBlock(randomBlockWithSignature(t, 2, getPrevBlockHash(t, bc, uint32(1)))))
+	assert.NotNil(t, bc.AddBlock(randomBlockWithSignature(t, 3, types.Hash{})))
+}
 
 func getPrevBlockHash(t *testing.T, bc *Blockchain, height uint32) types.Hash {
 	prevHeader, err := bc.GetHeader(height)
