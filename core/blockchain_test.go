@@ -9,7 +9,7 @@ import (
 )
 
 func newBlockchainWithGenesis(t *testing.T) *Blockchain {
-	bc, err := NewBlockchain(randomBlock(1, types.Hash{}))
+	bc, err := NewBlockchain(randomBlock(t, 1, types.Hash{}))
 	assert.Nil(t, err)
 
 	return bc
@@ -22,13 +22,14 @@ func TestAddBlock(t *testing.T) {
 	for i := 2; i <= totalBlocks; i++ {
 		// block := randomBlockWithSignature(t, uint32(i), getPrevBlockHash(t, bc, uint32(i)))
 		block := randomBlockWithSignature(t, uint32(i), getPrevBlockHash(t, bc, uint32(i-1)))
+		fmt.Println(block.Transactions[0].Signature)
 		assert.Nil(t, bc.AddBlock(block))
 	}
 
 	assert.Equal(t, bc.Height(), uint32(totalBlocks))
 	assert.Equal(t, len(bc.headers), totalBlocks)
 
-	assert.NotNil(t, bc.AddBlock(randomBlock(20, types.Hash{})))
+	assert.NotNil(t, bc.AddBlock(randomBlock(t, 20, types.Hash{})))
 }
 
 func TestNewBlockchain(t *testing.T) {
@@ -57,6 +58,7 @@ func TestGetHeader(t *testing.T) {
 }
 
 // TODO: Too high blocks can't be hashed thus produce an error while getting its prevHash
+
 // func TestAddBlockTooHigh(t *testing.T) {
 // 	bc := newBlockchainWithGenesis(t)
 //
