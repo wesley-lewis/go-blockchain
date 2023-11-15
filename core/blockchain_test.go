@@ -19,7 +19,7 @@ func TestAddBlock(t *testing.T) {
 
 	totalBlocks := 1000
 	for i := 0; i < 1000; i++ {
-		block := randomBlock(uint32(i + 1))
+		block := randomBlockWithSignature(t, uint32(i+1))
 		assert.Nil(t, bc.AddBlock(block))
 	}
 
